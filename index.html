@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Palabra Viva</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#1a1426">
+<style>
+:root{--bg:#1a1426;--card:#251c36;--line:#3a2d52;--tx:#f1edf8;--mut:#b3a7c9;--ac:#f0c36a;--ok:#7fd6a8;box-sizing:border-box}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+h1,h2,h3,.bib{font-family:Georgia,"Times New Roman",serif}
+h1{margin:0;font-size:26px;color:var(--ac)}h2{margin:0 0 8px;font-size:21px}h3{margin:0 0 4px;font-size:17px}
+header{padding:16px 16px 4px;text-align:center}
+nav{display:flex;gap:6px;padding:8px 10px;overflow-x:auto;position:sticky;top:0;background:var(--bg);z-index:5}
+nav button{flex:0 0 auto;background:transparent;color:var(--mut);border:1px solid var(--line);padding:8px 14px;border-radius:20px;font-size:15px;cursor:pointer}
+nav button.on{background:var(--ac);color:#241a05;border-color:var(--ac);font-weight:600}
+main{max-width:640px;margin:0 auto;padding:10px 16px 50px}
+section{display:none}section.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.mut{color:var(--mut);font-size:14px}.ok{color:var(--ok)}
+.bib{font-size:19px;line-height:1.7}
+.btn{background:var(--ac);color:#241a05;border:0;border-radius:12px;padding:11px 16px;font-size:16px;font-weight:700;cursor:pointer;margin:4px 6px 4px 0}
+.btn.s{background:transparent;color:var(--ac);border:1px solid var(--ac)}
+select,input[type=time],input[type=search],textarea{width:100%;background:#1a1426;color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:16px;font-family:inherit}
+textarea{min-height:130px}
+.row{display:flex;gap:8px;margin:8px 0}.row>*{flex:1}
+.streak{font-size:34px;font-family:Georgia,serif;color:var(--ac)}
+.v{margin:0 0 6px;cursor:pointer}.v b{color:var(--ac);font-size:13px;vertical-align:super;margin-right:4px}.v.hl{background:#3a2d52;border-radius:6px}
+details{border-top:1px solid var(--line);padding:8px 0}details:first-of-type{border:0}summary{cursor:pointer;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.chip{background:#1a1426;color:var(--tx);border:1px solid var(--line);border-radius:18px;padding:8px 14px;cursor:pointer;font-size:15px}
+.axis{position:relative;height:12px;background:var(--line);border-radius:6px;margin:6px 0 2px}.axis i{position:absolute;top:0;height:12px;background:var(--ac);border-radius:6px;min-width:6px}
+.chip.on{background:var(--ac);color:#241a05;border-color:var(--ac);font-weight:600}
+.q{margin:4px 0 4px 18px;padding:0}
+.sr{padding:8px 0;border-top:1px solid var(--line);cursor:pointer;font-size:15px}
+a{color:var(--ac)}
+button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px solid #fff;outline-offset:2px}
+</style>
+</head>
+<body>
+<header><h1>Palabra Viva</h1><div class="mut">Lee, aprende, predica y comparte · Versión 4</div></header>
+<nav id="nav"></nav>
+<main>
+
+<section id="hoy">
+<div class="card"><div class="mut">Tu racha de lectura</div><div class="streak" id="streak">🔥 0 días</div>
+<div id="plantxt" style="margin:6px 0"></div>
+<button class="btn" id="readnow">Leer ahora</button><button class="btn s" id="markread">Ya lo leí ✓</button>
+<div id="hmsg"></div><div class="mut" id="prog"></div></div>
+<div class="card"><h2>Devocional de hoy</h2><div class="bib" id="devv">Cargando…</div><div class="mut" id="devr"></div><p id="devt"></p></div>
+<div class="card"><h2>Mi plan de lectura</h2>
+<div class="mut">¿Qué quieres leer?</div><select id="rplan" aria-label="Qué leer"></select>
+<div class="mut" style="margin-top:10px">¿Cuánto por día?</div><select id="rper" aria-label="Capítulos por día"></select>
+<div class="mut" style="margin-top:10px">¿Qué días vas a leer? (toca para elegir)</div><div class="chips" id="rdays"></div>
+<button class="btn s" id="rreset">Empezar el plan de nuevo</button></div>
+<div class="card"><h2>Recordatorio</h2>
+<label><input type="checkbox" id="ron"> Avisarme los días elegidos para leer la Biblia</label>
+<div class="row"><input type="time" id="rtime" value="08:00" aria-label="Hora del recordatorio"></div>
+<div class="mut">Los avisos llegan cuando la app está abierta o instalada en tu teléfono. Un sitio de GitHub no puede enviar avisos con la app totalmente cerrada.</div></div>
+</section>
+
+<section id="biblia">
+<div class="card"><input type="search" id="bq" placeholder="Buscar una palabra (mínimo 3 letras)" aria-label="Buscar en la Biblia">
+<div id="sres"></div>
+<div class="row"><select id="bsel" aria-label="Libro"></select><select id="csel" aria-label="Capítulo"></select></div>
+<div class="row"><button class="btn s" id="prev">← Anterior</button><button class="btn s" id="next">Siguiente →</button><button class="btn s" id="fm">A−</button><button class="btn s" id="fp">A+</button></div>
+<div class="mut">Reina-Valera 1909 (dominio público). Toca un versículo para copiarlo.</div></div>
+<div class="card bib" id="txt">Cargando Biblia…</div>
+</section>
+
+<section id="aprender">
+<div class="card"><h2>Teoría bíblica</h2><div id="theory"></div></div>
+<div class="card"><h2>Estudios bíblicos</h2><div class="mut">Lee el pasaje y responde las preguntas.</div><div id="studies"></div></div>
+</section>
+
+<section id="historias"><div id="stories"></div></section>
+
+<section id="profetas">
+<div class="card"><h2>Profetas y sus fechas</h2><div class="mut">Años aproximados antes de Cristo. Los estudiosos discrepan en varias fechas. Joel no aparece porque su fecha es muy discutida.</div></div>
+<div id="proph"></div>
+</section>
+
+<section id="predicar">
+<div class="card"><h2>Asistente para predicar</h2>
+<div class="mut">Habla tu mensaje con el micrófono o escríbelo. El asistente te anima y revisa si tiene cita bíblica, aplicación y llamado.</div>
+<textarea id="ptext" placeholder="Tu prédica aparece aquí…"></textarea>
+<div class="mut" id="pcount">0 palabras</div>
+<div id="pmsg" class="ok" style="min-height:26px;font-weight:600"></div>
+<button class="btn" id="pmic">🎙 Hablar mi prédica</button><button class="btn s" id="prev2">Revisar mi mensaje</button>
+<div id="pres"></div></div>
+<div class="card"><h2>Bosquejos para predicar</h2><div id="sermons"></div></div>
+</section>
+
+<section id="evangelio">
+<div class="card"><h2>El evangelio en 4 pasos</h2><div id="gospel"></div></div>
+<div class="card"><h2>Cómo compartir tu fe</h2><ul class="q" id="tips"></ul></div>
+<div class="card"><h2>Tu testimonio</h2><div class="mut">Responde y arma un texto para compartir.</div>
+<textarea id="t1" style="min-height:70px" placeholder="¿Cómo era tu vida antes de conocer a Jesús?"></textarea>
+<textarea id="t2" style="min-height:70px;margin-top:8px" placeholder="¿Cómo lo conociste?"></textarea>
+<textarea id="t3" style="min-height:70px;margin-top:8px" placeholder="¿Qué ha cambiado desde entonces?"></textarea>
+<button class="btn" id="tbtn">Copiar mi testimonio</button><div class="mut" id="tmsg"></div></div>
+<div class="card"><h2>Preguntas frecuentes</h2><div id="faq"></div></div>
+</section>
+
+<section id="asistente">
+<div class="card"><h2>Asistente de aliento</h2>
+<div class="mut">Cuéntale cómo te sientes (con tu voz o tocando una opción) y te leerá una palabra de la Biblia. Es un mensaje de aliento basado en la Escritura, no una profecía personal.</div>
+<div class="chips" id="topics"></div>
+<button class="btn" id="amic">🎙 Hablar con el asistente</button><button class="btn s" id="astop">Callar</button>
+<div id="aout" style="margin-top:10px"></div></div>
+</section>
+
+<p style="text-align:center;padding:0 16px 40px"><button class="btn s" id="upd">Actualizar app</button></p>
+</main>
+<script>
+/* Contenido de Palabra Viva. Los textos bíblicos se leen de biblia.json (Reina-Valera 1909). */
+const BN=['Génesis','Éxodo','Levítico','Números','Deuteronomio','Josué','Jueces','Rut','1 Samuel','2 Samuel','1 Reyes','2 Reyes','1 Crónicas','2 Crónicas','Esdras','Nehemías','Ester','Job','Salmos','Proverbios','Eclesiastés','Cantares','Isaías','Jeremías','Lamentaciones','Ezequiel','Daniel','Oseas','Joel','Amós','Abdías','Jonás','Miqueas','Nahúm','Habacuc','Sofonías','Hageo','Zacarías','Malaquías','Mateo','Marcos','Lucas','Juan','Hechos','Romanos','1 Corintios','2 Corintios','Gálatas','Efesios','Filipenses','Colosenses','1 Tesalonicenses','2 Tesalonicenses','1 Timoteo','2 Timoteo','Tito','Filemón','Hebreos','Santiago','1 Pedro','2 Pedro','1 Juan','2 Juan','3 Juan','Judas','Apocalipsis'];
+
+/* [libro, capítulo, versículo inicial, versículo final] y una reflexión breve */
+const DEV=[
+ {r:[18,23,1,4],t:'El Pastor no te lleva por el camino fácil, pero camina contigo en cada tramo. Hoy descansa en que Él guía.'},
+ {r:[19,3,5,6],t:'Confiar no es entender todo. Es entregarle a Dios el control y seguir caminando con obediencia.'},
+ {r:[22,41,10,10],t:'El temor es real, pero la presencia de Dios es más real todavía. Hoy no estás solo.'},
+ {r:[49,4,6,7],t:'Convierte la preocupación en oración. La paz de Dios cuida tu corazón cuando se la pides.'},
+ {r:[5,1,9,9],t:'La valentía cristiana nace de saber quién va contigo. Da hoy ese paso pendiente.'},
+ {r:[44,8,28,28],t:'Dios puede usar incluso lo difícil para tu bien. Confía en su mano, aunque hoy no veas el resultado.'},
+ {r:[42,14,27,27],t:'La paz de Jesús no depende de las circunstancias. Recíbela hoy como un regalo.'},
+ {r:[39,6,33,33],t:'Pon a Dios primero y deja que Él ordene el resto. Empieza tu día con Él.'},
+ {r:[57,11,1,1],t:'La fe es confiar en lo que Dios prometió aun antes de verlo cumplido.'},
+ {r:[18,119,105,105],t:'La Palabra no siempre ilumina todo el camino, pero sí el siguiente paso. Léela hoy.'},
+ {r:[24,3,22,23],t:'Cada mañana trae misericordia nueva. Lo de ayer no define tu hoy.'},
+ {r:[23,29,11,11],t:'Dios tiene planes de bien para su pueblo. Espera en Él con paciencia y esperanza.'},
+ {r:[47,5,22,23],t:'El Espíritu produce fruto con el tiempo. Pídele hoy que crezca amor, paciencia y bondad en ti.'},
+ {r:[59,5,7,7],t:'Entrégale a Dios tu ansiedad. Él se ocupa de ti, y tú puedes soltar la carga.'}
+];
+
+const WORDS={
+ 'Miedo':{r:[22,41,10,10],t:'Dios te dice hoy que no temas. Él está contigo aunque no lo sientas. Da el siguiente paso con confianza.'},
+ 'Cansancio':{r:[39,11,28,28],t:'Ven a Jesús tal como estás. Descansa un momento: no tienes que cargar solo con todo.'},
+ 'Familia':{r:[43,16,31,31],t:'Pon a los tuyos en las manos de Dios. Ora por ellos hoy: Él cuida lo que le entregas.'},
+ 'Futuro':{r:[23,29,11,11],t:'Tu futuro está en manos de un Dios fiel. Hoy te toca confiar y ser obediente en lo pequeño.'},
+ 'Perdón':{r:[61,1,9,9],t:'Si te arrepientes de corazón, Dios te perdona. No sigas cargando lo que Cristo ya cargó por ti.'},
+ 'Dudas':{r:[58,1,5,5],t:'Dudar no te aleja de Dios si lo sigues buscando. Pídele sabiduría con sinceridad.'},
+ 'Ánimo':{r:[18,46,1,1],t:'Dios es tu refugio en el momento difícil. Respira, ora y sigue adelante.'}
+};
+
+const THEORY=[
+ ['¿Qué es la Biblia?','Es una biblioteca de 66 libros: 39 del Antiguo Testamento y 27 del Nuevo. Fue escrita por unos 40 autores durante más de mil años, y los cristianos creen que cuenta una sola historia: la obra de Dios para rescatar a la humanidad por medio de Jesucristo.'],
+ ['Inspiración y autoridad','Los cristianos creen que la Escritura viene de Dios y sirve para enseñar, corregir y formar en justicia (2 Timoteo 3:16). Dios habló usando la personalidad y el estilo de cada autor humano.'],
+ ['Géneros literarios','Ley, historia, poesía, sabiduría, profecía, evangelios, cartas y literatura apocalíptica. Cada género se lee distinto: un salmo no se interpreta como una carta, ni una parábola como una lista de normas.'],
+ ['Los pactos','Dios se relaciona con su pueblo por medio de pactos: con Noé, con Abraham, con Moisés en el Sinaí y con David. Los cristianos creen que todos apuntan al nuevo pacto en Cristo (Lucas 22:20).'],
+ ['Cómo estudiar un pasaje','Observa: ¿qué dice el texto? Interpreta: ¿qué significó para los primeros lectores? Aplica: ¿qué cambia hoy en mi vida? Lee siempre el contexto: el capítulo completo, no solo un versículo.'],
+ ['La Trinidad','Los cristianos creen en un solo Dios que existe como Padre, Hijo y Espíritu Santo. Es una verdad que se confiesa por fe, y se ve, por ejemplo, en el bautismo de Jesús (Mateo 3:16-17).']
+];
+
+const STUDIES=[
+ {t:'Conociendo a Jesús',r:[42,1],q:['¿Qué dice este capítulo sobre quién es Jesús?','¿Qué nombre o título te llama más la atención?','¿Qué significa para ti que el Verbo se hizo carne?']},
+ {t:'El Sermón del Monte',r:[39,5],q:['¿Cuál de las bienaventuranzas necesitas más hoy?','¿Qué dice Jesús sobre el corazón y no solo sobre los actos?','¿Qué cambio concreto harás esta semana?']},
+ {t:'Aprender a orar',r:[39,6],q:['¿Qué enseña el Padre Nuestro sobre cómo orar?','¿Qué lugar ocupa el perdón en la oración?','¿Cuándo y dónde oras tú?']},
+ {t:'Fruto del Espíritu',r:[47,5],q:['¿Cuál de los nueve frutos ves menos en ti?','¿Cuál es la diferencia entre obras de la carne y fruto del Espíritu?','¿Cómo puedes cultivar uno de ellos esta semana?']},
+ {t:'Más que vencedores',r:[44,8],q:['¿Qué significa "ninguna condenación"?','¿Cómo ayuda el Espíritu a quien está débil?','¿Qué te separa del amor de Dios según el final del capítulo?']},
+ {t:'La armadura de Dios',r:[48,6],q:['¿Contra quién es la lucha, según el pasaje?','¿Qué pieza de la armadura descuidas más?','¿Qué papel tiene la oración en este capítulo?']},
+ {t:'Fe que se ve',r:[58,2],q:['¿Cómo se relacionan fe y obras en este pasaje?','¿Qué ejemplos usa Santiago?','¿Qué obra concreta pide tu fe hoy?']},
+ {t:'El camino del justo',r:[18,1],q:['¿Qué hace feliz al que medita en la Palabra?','¿Qué imagen usa el salmo para describirlo?','¿Cómo puedes meditar en la Escritura a diario?']}
+];
+
+const STORIES=[
+ {t:'La creación',r:[0,1],s:'Dios crea el cielo, la tierra y a las personas a su imagen, y ve que todo es bueno.',l:'Dios es el origen de todo y nos hizo con propósito.'},
+ {t:'Adán y Eva',r:[0,3],s:'Desobedecen a Dios y se rompe la relación con Él, pero Dios promete un rescate.',l:'El pecado separa, pero Dios busca al caído.'},
+ {t:'Caín y Abel',r:[0,4],s:'Caín, movido por la envidia, mata a su hermano. Dios le advierte que domine el pecado.',l:'La envidia, si no se frena, destruye.'},
+ {t:'Noé y el diluvio',r:[0,6],s:'Dios salva a Noé y su familia en el arca y después promete no volver a destruir la tierra con diluvio.',l:'Dios juzga el mal y también provee salvación.'},
+ {t:'La torre de Babel',r:[0,11],s:'Los hombres quieren hacerse famosos construyendo una torre. Dios confunde sus idiomas y los dispersa.',l:'El orgullo humano no llega al cielo.'},
+ {t:'Abraham y la promesa',r:[0,12],s:'Dios llama a Abram a dejar su tierra y le promete bendecir a todas las familias de la tierra por medio de él.',l:'La fe obedece aunque no vea el destino.'},
+ {t:'Abraham e Isaac',r:[0,22],s:'Dios prueba a Abraham pidiéndole a Isaac; en el último momento provee un carnero.',l:'Dios provee lo que pide.'},
+ {t:'El sueño de Jacob',r:[0,28],s:'Jacob huye de su casa y sueña con una escalera al cielo. Dios le promete estar con él.',l:'Dios está presente aun en los lugares inesperados.'},
+ {t:'José, de esclavo a gobernador',r:[0,37],s:'Vendido por sus hermanos, José pasa por esclavitud y cárcel y llega a gobernar Egipto para salvar a su familia.',l:'Dios convierte en bien lo que otros planearon para mal.'},
+ {t:'Moisés y la zarza ardiente',r:[1,3],s:'Dios llama a Moisés desde una zarza que arde sin consumirse y lo envía a liberar a Israel.',l:'Dios usa a quien se siente incapaz.'},
+ {t:'El paso del mar',r:[1,14],s:'Dios abre el mar para que Israel escape de Egipto en seco, y los egipcios no pueden seguirlos.',l:'Dios libera a su pueblo con poder.'},
+ {t:'Los diez mandamientos',r:[1,20],s:'En el Sinaí, Dios da a su pueblo los diez mandamientos para vivir en relación con Él y con los demás.',l:'La ley de Dios muestra cómo amar.'},
+ {t:'Josué y Jericó',r:[5,6],s:'Israel rodea Jericó siguiendo las instrucciones de Dios y los muros caen.',l:'La victoria viene de obedecer a Dios.'},
+ {t:'Rut',r:[7,1],s:'Rut, extranjera, se queda con su suegra Noemí y confía en el Dios de Israel. Dios la bendice.',l:'La lealtad y la fe son recompensadas.'},
+ {t:'Ana y Samuel',r:[8,1],s:'Ana ora con lágrimas por un hijo y Dios se lo concede. Ella entrega a Samuel al servicio de Dios.',l:'Dios escucha la oración sincera.'},
+ {t:'David y Goliat',r:[8,17],s:'Un joven pastor enfrenta a un gigante con fe en Dios y una honda.',l:'La batalla es de Dios, no de nuestras fuerzas.'},
+ {t:'Salomón pide sabiduría',r:[10,3],s:'Salomón, nuevo rey, le pide a Dios un corazón entendido para gobernar. Dios se agrada y le da más.',l:'La sabiduría vale más que el poder.'},
+ {t:'Elías en el Carmelo',r:[10,18],s:'Elías reta a los profetas de Baal. Dios responde con fuego y el pueblo vuelve a Jehová.',l:'No se puede servir a dos señores.'},
+ {t:'Ester',r:[16,4],s:'Ester arriesga su vida ante el rey para salvar a su pueblo de la destrucción.',l:'Dios nos pone en un lugar para un momento concreto.'},
+ {t:'El horno de fuego',r:[26,3],s:'Tres jóvenes se niegan a adorar la estatua del rey y son echados al horno. Dios los acompaña dentro.',l:'Dios está con nosotros en la prueba.'},
+ {t:'Daniel en el foso',r:[26,6],s:'Por orar a Dios, Daniel es echado a los leones. Dios lo guarda.',l:'La fidelidad se mantiene aun bajo presión.'},
+ {t:'Jonás y Nínive',r:[31,1],s:'Jonás huye de la misión de Dios, pero termina predicando en Nínive, que se arrepiente.',l:'La misericordia de Dios alcanza a todos.'},
+ {t:'El nacimiento de Jesús',r:[41,2],s:'Jesús nace en Belén. Los pastores reciben la noticia de gran gozo para todo el pueblo.',l:'Dios se acercó a nosotros en Jesús.'},
+ {t:'El bautismo de Jesús',r:[39,3],s:'Jesús es bautizado por Juan. El Espíritu desciende y se oye la voz del Padre.',l:'Jesús inicia su misión con la aprobación del Padre.'},
+ {t:'El buen samaritano',r:[41,10],s:'Un samaritano ayuda al herido que otros ignoraron. Jesús enseña quién es el prójimo.',l:'Amar es actuar con misericordia.'},
+ {t:'El hijo pródigo',r:[41,15],s:'Un hijo gasta la herencia, vuelve arrepentido y su padre lo recibe con los brazos abiertos.',l:'El Padre siempre recibe al que vuelve.'},
+ {t:'La samaritana',r:[42,4],s:'Jesús habla con una mujer samaritana junto al pozo y le ofrece agua viva.',l:'Jesús ofrece vida a todos, sin importar su pasado.'},
+ {t:'La resurrección de Lázaro',r:[42,11],s:'Jesús llama a Lázaro de la tumba después de cuatro días.',l:'Jesús tiene poder sobre la muerte.'},
+ {t:'La resurrección de Jesús',r:[41,24],s:'Al tercer día, las mujeres encuentran la tumba vacía. Jesús vive y se aparece a sus discípulos.',l:'Cristo venció la muerte y da esperanza.'},
+ {t:'Pentecostés',r:[43,2],s:'El Espíritu Santo llena a los discípulos y miles creen en Jesús ese día.',l:'El Espíritu da poder para ser testigos.'},
+ {t:'Pablo camino a Damasco',r:[43,9],s:'Saulo, perseguidor de cristianos, encuentra a Jesús y se convierte en apóstol.',l:'Nadie está demasiado lejos para ser alcanzado.'},
+ {t:'Pablo y Silas en la cárcel',r:[43,16],s:'Pablo y Silas cantan en la prisión a medianoche; un terremoto abre las puertas y el carcelero cree.',l:'La alabanza puede abrir puertas en la prueba.'}
+];
+
+/* Fechas aproximadas en años a.C. [nombre, inicio, fin, lugar, mensaje, libro] */
+const PROPH=[
+ ['Samuel',1050,1010,'Israel','Ungió a los primeros reyes de Israel',8],
+ ['Natán',1000,970,'Jerusalén','Confrontó a David por su pecado',9],
+ ['Elías',875,848,'Reino del norte','Llamó al pueblo a volver a Jehová',10],
+ ['Eliseo',855,800,'Reino del norte','Continuó el ministerio de Elías',11],
+ ['Jonás',785,760,'Nínive','Dios ofrece misericordia a todos',31],
+ ['Amós',765,750,'Reino del norte','Justicia para el pobre',29],
+ ['Oseas',755,715,'Reino del norte','El amor fiel de Dios',27],
+ ['Isaías',740,680,'Judá','Juicio y esperanza del Mesías',22],
+ ['Miqueas',735,700,'Judá','Justicia, misericordia y Belén',32],
+ ['Nahúm',663,612,'Nínive','La caída de Nínive',33],
+ ['Sofonías',635,625,'Judá','El día de Jehová',35],
+ ['Jeremías',627,585,'Judá','Arrepentimiento y nuevo pacto',23],
+ ['Habacuc',609,598,'Judá','El justo por su fe vivirá',34],
+ ['Daniel',605,535,'Babilonia','Dios gobierna los reinos',26],
+ ['Ezequiel',593,571,'Exilio','Visión de renovación',25],
+ ['Abdías',585,585,'Edom','Juicio contra Edom',30],
+ ['Hageo',520,520,'Jerusalén','Reconstruir el templo',36],
+ ['Zacarías',520,480,'Jerusalén','Esperanza y el Rey que viene',37],
+ ['Malaquías',430,430,'Jerusalén','Volver a Dios con sinceridad',38]
+];
+
+const SERMONS=[
+ {t:'El Buen Pastor',r:[18,23],pts:['Él me guía: no camino a ciegas','Él me acompaña: aun en el valle más oscuro','Él me restaura: su bondad me sigue siempre'],ap:'¿En qué área necesitas dejarte pastorear hoy?',ll:'Invita a entregarle la vida al Pastor.'},
+ {t:'Una fe que se mueve',r:[57,11],pts:['La fe cree antes de ver','La fe obedece aunque cueste','La fe espera la promesa de Dios'],ap:'¿Qué paso de fe te ha pedido Dios?',ll:'Llama a dar ese paso hoy.'},
+ {t:'Perdonados para perdonar',r:[39,18],pts:['La deuda que Dios nos perdonó','El corazón que se niega a perdonar','El perdón como decisión diaria'],ap:'¿A quién necesitas perdonar esta semana?',ll:'Invita a orar y soltar el rencor.'},
+ {t:'Una esperanza viva',r:[59,1],pts:['Nacimos de nuevo por la resurrección','La herencia que no se marchita','La fe probada vale más que el oro'],ap:'¿Dónde necesitas esperanza hoy?',ll:'Presenta a Cristo como la esperanza.'},
+ {t:'Fe en medio de la tormenta',r:[40,4],pts:['Jesús está en la barca','Jesús escucha el clamor','Jesús tiene autoridad sobre la tormenta'],ap:'¿Qué tormenta enfrentas hoy?',ll:'Invita a confiar en Jesús.'}
+];
+
+const GOSPEL=[
+ ['Dios te ama',[42,3,16,16]],
+ ['El pecado nos separa',[44,3,23,23]],
+ ['Cristo pagó por ti',[44,5,8,8]],
+ ['Respondemos con fe',[44,10,9,9]]
+];
+
+const EVA_TIPS=[
+ 'Ora primero por la persona y por la oportunidad.',
+ 'Prepara tu testimonio en tres partes: cómo vivías, cómo conociste a Jesús y qué cambió.',
+ 'Haz preguntas y escucha. Una conversación vale más que un discurso.',
+ 'Usa pocas palabras y mucha Biblia: comparte un versículo clave.',
+ 'Invita con amor, sin presionar. Dios es quien convence.'
+];
+
+const FAQ=[
+ ['¿Quién fue Jesús?','Los cristianos creen que Jesús es el Hijo de Dios hecho hombre, que murió en la cruz por nuestros pecados y resucitó al tercer día.'],
+ ['¿Qué significa ser salvo?','Es recibir el perdón y la vida eterna por la gracia de Dios, mediante la fe en Jesucristo, no por méritos propios (Efesios 2:8-9).'],
+ ['¿Qué es la iglesia?','Es la comunidad de quienes siguen a Jesús: se reúnen para adorar, aprender la Biblia, servirse y compartir el evangelio.'],
+ ['¿Cómo empiezo a leer la Biblia?','Empieza por el Evangelio de Juan y sigue con Salmos y Proverbios. Lee poco cada día y apunta lo que aprendes.']
+];
+
+</script>
+<script>
+window.addEventListener('error',e=>{if(document.getElementById('errb'))return;const b=document.createElement('div');b.id='errb';b.style.cssText='background:#7a2e2e;color:#fff;padding:8px 12px;font-size:13px';b.textContent='Error en la app: '+e.message;document.body.prepend(b)});
+const $=s=>document.querySelector(s);
+let rec=null,pOn=false;
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const strip=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+const key=d=>d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+const TABS=[['hoy','Hoy'],['biblia','Biblia'],['aprender','Aprender'],['historias','Historias'],['profetas','Profetas'],['predicar','Predicar'],['evangelio','Evangelismo'],['asistente','Asistente']];
+
+/* Estado guardado */
+let S={on:false,h:8,m:0,last:'',nt:'',streak:0,plan:'Evangelio de Juan',idx:0,per:1,days:[true,true,true,true,true,true,true]};
+try{Object.assign(S,JSON.parse(localStorage.getItem('pv')||'{}'))}catch(e){}
+if(!Array.isArray(S.days)||S.days.length!==7)S.days=[true,true,true,true,true,true,true];
+if(!(S.per>=1&&S.per<=5))S.per=1;
+function save(){
+  try{localStorage.setItem('pv',JSON.stringify(S))}catch(e){}
+  try{caches.open('ajustes').then(c=>c.put(new URL('ajustes.json',location.href).href,new Response(JSON.stringify(S))))}catch(e){}
+}
+
+function copyText(t,ok,fail){
+  const fb=()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();let r=false;try{r=document.execCommand('copy')}catch(e){}a.remove();r?ok():fail()};
+  try{navigator.clipboard.writeText(t).then(ok,fb)}catch(e){fb()}
+}
+/* Pestañas */
+TABS.forEach(([id,n],i)=>{const b=document.createElement('button');b.textContent=n;b.dataset.t=id;if(!i)b.classList.add('on');b.onclick=()=>go(id);$('#nav').appendChild(b)});
+$('section').classList.add('on');
+function go(id){
+  try{stopTalk()}catch(e){}
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===id));
+  document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id===id));
+  window.scrollTo(0,0);
+}
+
+/* Biblia */
+let BIB=null,bk=42,ch=0,fs=19,NORM=null;
+async function loadBible(){
+  if(BIB)return true;
+  try{const r=await fetch('biblia.json');BIB=await r.json();return true}catch(e){return false}
+}
+const verseText=r=>{const[b,c,a,z]=r;return BIB?BIB[b].c[c-1].slice(a-1,z).join(' '):''};
+const refName=r=>BN[r[0]]+' '+r[1]+':'+r[2]+(r[3]>r[2]?'-'+r[3]:'');
+BN.forEach((n,i)=>$('#bsel').add(new Option(n,i)));
+function fillCh(){
+  const c=$('#csel');c.innerHTML='';
+  const n=BIB?BIB[bk].c.length:1;
+  for(let i=0;i<n;i++)c.add(new Option('Cap. '+(i+1),i));
+  c.value=ch;
+}
+async function showChapter(hl){
+  const ok=await loadBible();
+  if(!ok){$('#txt').textContent='No se pudo cargar biblia.json. Verifica que el archivo esté en la raíz del repositorio.';return}
+  $('#bsel').value=bk;fillCh();
+  $('#txt').style.fontSize=fs+'px';
+  $('#txt').innerHTML='<h2>'+BN[bk]+' '+(ch+1)+'</h2>'+BIB[bk].c[ch].map((t,i)=>'<p class="v'+(hl===i+1?' hl':'')+'" id="v'+(i+1)+'"><b>'+(i+1)+'</b>'+t+'</p>').join('');
+  document.querySelectorAll('.v').forEach((p,i)=>p.onclick=()=>{copyText(BIB[bk].c[ch][i]+' — '+BN[bk]+' '+(ch+1)+':'+(i+1),()=>{},()=>{});p.classList.add('hl')});
+  if(hl){const e=$('#v'+hl);e&&e.scrollIntoView({block:'center'})}
+}
+function openPassage(b,c,v){bk=b;ch=c-1;go('biblia');showChapter(v)}
+$('#bsel').onchange=e=>{bk=+e.target.value;ch=0;showChapter()};
+$('#csel').onchange=e=>{ch=+e.target.value;showChapter()};
+$('#next').onclick=()=>{if(!BIB)return;if(ch+1<BIB[bk].c.length)ch++;else if(bk<65){bk++;ch=0}showChapter();window.scrollTo(0,0)};
+$('#prev').onclick=()=>{if(!BIB)return;if(ch>0)ch--;else if(bk>0){bk--;ch=BIB[bk].c.length-1}showChapter();window.scrollTo(0,0)};
+$('#fp').onclick=()=>{fs=Math.min(30,fs+2);showChapter()};
+$('#fm').onclick=()=>{fs=Math.max(14,fs-2);showChapter()};
+$('#bq').oninput=async e=>{
+  const q=strip(e.target.value.trim()),out=$('#sres');
+  if(q.length<3){out.innerHTML='';return}
+  if(!await loadBible())return;
+  if(!NORM){NORM=[];BIB.forEach((b,bi)=>b.c.forEach((c,ci)=>c.forEach((t,vi)=>NORM.push([bi,ci,vi,t,strip(t)]))))}
+  const r=[];for(const x of NORM){if(x[4].includes(q)){r.push(x);if(r.length>=40)break}}
+  out.innerHTML=r.length?r.map((x,i)=>'<div class="sr" data-i="'+i+'"><b>'+BN[x[0]]+' '+(x[1]+1)+':'+(x[2]+1)+'</b> '+x[3]+'</div>').join(''):'<div class="mut">Sin resultados.</div>';
+  out.querySelectorAll('.sr').forEach(d=>d.onclick=()=>{const x=r[d.dataset.i];out.innerHTML='';openPassage(x[0],x[1]+1,x[2]+1)});
+};
+
+/* Hoy */
+const NMSG=['📖 Tu Biblia te espera. Unos minutos hoy hacen la diferencia.','🔥 ¡Cuida tu racha de {n} días! Lee tu pasaje de hoy.','🙏 Dios tiene una palabra para ti hoy. ¿La escuchas?','Hoy todavía no abriste la Biblia. Te esperamos.'];
+const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const PLANS={'Evangelio de Juan':[42,42],'Evangelio de Marcos':[40,40],'Evangelio de Lucas':[41,41],'Hechos':[43,43],'Salmos':[18,18],'Proverbios':[19,19],'Génesis':[0,0],'Nuevo Testamento':[39,65],'Biblia completa':[0,65]};
+const DIAS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+function seq(){const q=[];if(!BIB)return q;const[a,z]=PLANS[S.plan]||PLANS['Evangelio de Juan'];for(let b=a;b<=z;b++)for(let c=0;c<BIB[b].c.length;c++)q.push([b,c]);return q}
+function todays(){const q=seq(),o=[];if(!q.length)return o;for(let i=0;i<S.per;i++)o.push(q[(S.idx+i)%q.length]);return o}
+const lbl=L=>L.map(x=>BN[x[0]]+' '+(x[1]+1)).join(', ');
+function prevSched(d){for(let i=1;i<=7;i++){const x=new Date(d);x.setDate(x.getDate()-i);if(S.days[x.getDay()])return x}return null}
+function liveStreak(){if(S.last===iso(new Date()))return S.streak;const p=prevSched(new Date());return(!p||S.last>=iso(p))?S.streak:0}
+function renderHoy(){
+  const n=new Date(),t=iso(n),done=S.last===t,L=todays(),q=seq();
+  const st=liveStreak();$('#streak').textContent='🔥 '+st+(st===1?' día':' días');
+  $('#plantxt').innerHTML=L.length?(done?'Siguiente lectura: ':'Hoy toca: ')+'<b>'+lbl(L)+'</b> <span class="mut">('+S.plan+')</span>':'Cargando tu plan…';
+  $('#prog').textContent=q.length?'Vas en el capítulo '+(S.idx%q.length+1)+' de '+q.length+' de este plan.':'';
+  $('#hmsg').innerHTML=done?'<span class="ok">Hoy ya leíste. ¡Bien hecho!</span>':(S.days[n.getDay()]?'<span class="mut">Todavía no marcaste tu lectura de hoy.</span>':'<span class="mut">Hoy es tu día libre, pero puedes leer si quieres.</span>');
+  const doy=Math.floor((n-new Date(n.getFullYear(),0,0))/864e5),dv=DEV[doy%DEV.length];
+  $('#devr').textContent=refName(dv.r);$('#devt').textContent=dv.t;
+  $('#devv').textContent=BIB?verseText(dv.r):'Abre la pestaña Biblia para leer '+refName(dv.r)+'.';
+}
+$('#readnow').onclick=async()=>{if(!await loadBible())return showChapter();const L=todays();if(L.length)openPassage(L[0][0],L[0][1]+1)};
+$('#markread').onclick=async()=>{
+  if(!await loadBible())return;
+  const t=iso(new Date());if(S.last===t)return;
+  S.streak=liveStreak()+1;S.last=t;S.idx=(S.idx+S.per)%(seq().length||1);save();renderHoy();
+};
+Object.keys(PLANS).forEach(n=>$('#rplan').add(new Option(n,n)));
+if(!PLANS[S.plan])S.plan='Evangelio de Juan';
+$('#rplan').value=S.plan;
+[1,2,3,4,5].forEach(n=>$('#rper').add(new Option(n+(n===1?' capítulo al día':' capítulos al día'),n)));
+$('#rper').value=S.per;
+DIAS.forEach((n,i)=>{
+  const b=document.createElement('button');b.className='chip'+(S.days[i]?' on':'');b.textContent=n;
+  b.onclick=()=>{S.days[i]=!S.days[i];b.classList.toggle('on',S.days[i]);save();renderHoy()};
+  $('#rdays').appendChild(b);
+});
+$('#rplan').onchange=e=>{S.plan=e.target.value;S.idx=0;save();renderHoy()};
+$('#rper').onchange=e=>{S.per=+e.target.value;save();renderHoy()};
+$('#rreset').onclick=()=>{S.idx=0;save();renderHoy()};
+$('#ron').checked=S.on;
+$('#rtime').value=String(S.h).padStart(2,'0')+':'+String(S.m).padStart(2,'0');
+$('#rtime').onchange=e=>{const[h,m]=e.target.value.split(':');S.h=+h;S.m=+m;S.nt='';save()};
+$('#ron').onchange=async e=>{
+  if(e.target.checked){
+    if(!('Notification' in window)){alert('Tu navegador no permite notificaciones.');e.target.checked=false;return}
+    const p=await Notification.requestPermission();
+    if(p!=='granted'){alert('Debes permitir las notificaciones para recibir el recordatorio.');e.target.checked=false;return}
+    try{const r=await navigator.serviceWorker.ready;if('periodicSync' in r)await r.periodicSync.register('recordatorio',{minInterval:12*3600*1000})}catch(x){}
+  }
+  S.on=e.target.checked;save();
+};
+function due(){const n=new Date(),t=iso(n);return S.on&&S.days[n.getDay()]&&S.last!==t&&S.nt!==t&&n.getHours()*60+n.getMinutes()>=S.h*60+S.m}
+async function fire(){
+  S.nt=iso(new Date());save();
+  const st=liveStreak(),m=pick(NMSG.filter(x=>st>0||!x.includes('{n}'))).replace('{n}',st);
+  try{const r=await navigator.serviceWorker.ready;r.showNotification('Palabra Viva',{body:m,icon:'icon.svg',badge:'icon.svg',tag:'recordatorio'})}catch(e){}
+}
+setInterval(()=>{if(due()&&'Notification' in window&&Notification.permission==='granted')fire()},20000);
+
+/* Aprender */
+$('#theory').innerHTML=THEORY.map(x=>'<details><summary>'+x[0]+'</summary><p>'+x[1]+'</p></details>').join('');
+$('#studies').innerHTML=STUDIES.map((s,i)=>'<details><summary>'+s.t+' <span class="mut">('+BN[s.r[0]]+' '+s.r[1]+')</span></summary><ul class="q">'+s.q.map(q=>'<li>'+q+'</li>').join('')+'</ul><button class="btn s" data-s="'+i+'">Leer pasaje</button></details>').join('');
+document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{const s=STUDIES[b.dataset.s];openPassage(s.r[0],s.r[1])});
+
+/* Historias */
+$('#stories').innerHTML=STORIES.map((s,i)=>'<div class="card"><h3>'+s.t+'</h3><div class="mut">'+BN[s.r[0]]+' '+s.r[1]+'</div><p>'+s.s+'</p><p class="ok">Lección: '+s.l+'</p><button class="btn s" data-h="'+i+'">Leer en la Biblia</button></div>').join('');
+document.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{const s=STORIES[b.dataset.h];openPassage(s.r[0],s.r[1])});
+
+/* Profetas */
+const P0=1100,P1=400;
+$('#proph').innerHTML=PROPH.map((p,i)=>{
+  const l=(P0-p[1])/(P0-P1)*100,w=Math.max(1,(p[1]-p[2])/(P0-P1)*100);
+  return '<div class="card"><h3>'+p[0]+'</h3><div class="mut">'+(p[1]===p[2]?'hacia '+p[1]:p[1]+' a '+p[2])+' a.C. · '+p[3]+'</div><div class="axis" aria-hidden="true"><i style="left:'+l+'%;width:'+w+'%"></i></div><div class="mut">1100 a.C. ←→ 400 a.C.</div><p>'+p[4]+'</p><button class="btn s" data-p="'+i+'">Leer su libro</button></div>';
+}).join('');
+document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>openPassage(PROPH[b.dataset.p][5],1));
+
+/* Voz */
+function speak(t){
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(t);u.lang='es-ES';u.pitch=0.8;u.rate=0.95;
+    const v=speechSynthesis.getVoices().filter(x=>x.lang.startsWith('es'));
+    u.voice=v.find(x=>/jorge|diego|juan|carlos|pablo|enrique|miguel|male|hombre/i.test(x.name))||v[0]||null;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+function stopTalk(){try{speechSynthesis.cancel()}catch(e){}stopPred()}
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+
+/* Predicar */
+const CHEER=['¡Wow, muy bien! Sigue así.','Excelente, continúa con esa palabra.','Muy bien, habla con confianza.','¡Qué buen mensaje! Sigue adelante.'];
+const words=s=>s.trim()?s.trim().split(/\s+/).length:0;
+function stopPred(){pOn=false;if(rec){try{rec.stop()}catch(e){}rec=null}$('#pmic').textContent='🎙 Hablar mi prédica'}
+$('#ptext').oninput=()=>$('#pcount').textContent=words($('#ptext').value)+' palabras';
+$('#pmic').onclick=()=>{
+  if(pOn){stopPred();review();return}
+  if(!SR){$('#pmsg').textContent='Tu navegador no reconoce la voz. Escribe tu mensaje y pulsa Revisar.';return}
+  rec=new SR();rec.lang='es-ES';rec.continuous=true;rec.interimResults=false;
+  rec.onresult=e=>{
+    for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal){
+      const ta=$('#ptext');ta.value+=(ta.value?' ':'')+e.results[i][0].transcript.trim();
+      $('#pcount').textContent=words(ta.value)+' palabras';$('#pmsg').textContent=pick(CHEER);
+    }
+  };
+  rec.onend=()=>{if(pOn){try{rec.start()}catch(e){}}};
+  rec.onerror=e=>{if(e.error==='not-allowed'){$('#pmsg').textContent='Permite el micrófono en tu navegador.';stopPred()}};
+  pOn=true;rec.start();$('#pmic').textContent='⏹ Terminar y revisar';$('#pmsg').textContent='Te escucho…';
+};
+$('#prev2').onclick=()=>{stopPred();review()};
+const BRE=new RegExp('('+BN.map(n=>strip(n)).join('|')+')\\s*\\d+','i');
+function review(){
+  const t=$('#ptext').value;if(words(t)<5){$('#pres').innerHTML='<p class="mut">Escribe o di tu mensaje primero.</p>';return}
+  const s=strip(t),n=words(t);
+  const C=[
+   [BRE.test(s),'Tiene una cita bíblica','Agrega el pasaje base, por ejemplo "Juan 3:16".'],
+   [/jesus|cristo|senor/.test(s),'Presenta a Cristo','Conecta el mensaje con Jesús.'],
+   [/\b(hoy|tu|vos|ti|nosotros|ustedes|vosotros)\b/.test(s),'Tiene aplicación personal','Habla directo al oyente: ¿qué hará distinto hoy?'],
+   [/(invito|arrepent|entrega|decide|oremos|oracion|ven a)/.test(s),'Termina con un llamado','Cierra con una invitación clara a responder.'],
+   [n>=150,'Tiene buen desarrollo ('+n+' palabras)','Desarróllalo un poco más: ejemplos o una historia.']
+  ];
+  const score=C.filter(x=>x[0]).length;
+  $('#pres').innerHTML='<h3 style="margin-top:12px">Revisión del asistente</h3>'+C.map(x=>'<div>'+(x[0]?'✅ '+x[1]:'💡 '+x[2])+'</div>').join('');
+  const m=score>=4?'¡Wow, muy bien! Da esa prédica con confianza.':'Buen comienzo. Mira los consejos y vuelve a intentarlo.';
+  $('#pmsg').textContent=m;speak(m);
+}
+$('#sermons').innerHTML=SERMONS.map((s,i)=>'<details><summary>'+s.t+' <span class="mut">('+BN[s.r[0]]+' '+s.r[1]+')</span></summary><ol class="q">'+s.pts.map(p=>'<li>'+p+'</li>').join('')+'</ol><p><b>Aplicación:</b> '+s.ap+'</p><p><b>Llamado:</b> '+s.ll+'</p><button class="btn s" data-x="'+i+'">Leer pasaje</button></details>').join('');
+document.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>{const s=SERMONS[b.dataset.x];openPassage(s.r[0],s.r[1])});
+
+/* Evangelismo */
+async function renderGospel(){
+  await loadBible();
+  $('#gospel').innerHTML=GOSPEL.map((g,i)=>'<details'+(i?'':' open')+'><summary>'+(i+1)+'. '+g[0]+'</summary><p class="bib" style="font-size:17px">'+(BIB?verseText(g[1]):'')+'</p><div class="mut">'+refName(g[1])+'</div></details>').join('');
+}
+$('#tips').innerHTML=EVA_TIPS.map(t=>'<li>'+t+'</li>').join('');
+$('#faq').innerHTML=FAQ.map(f=>'<details><summary>'+f[0]+'</summary><p>'+f[1]+'</p></details>').join('');
+$('#tbtn').onclick=()=>{
+  const t=[$('#t1').value,$('#t2').value,$('#t3').value].filter(Boolean).join('\n\n');
+  if(!t){$('#tmsg').textContent='Escribe al menos una respuesta.';return}
+  copyText(t,()=>$('#tmsg').textContent='Copiado. Puedes pegarlo donde quieras.',()=>$('#tmsg').textContent='No se pudo copiar.');
+};
+
+/* Asistente de aliento */
+Object.keys(WORDS).forEach(k=>{const b=document.createElement('button');b.className='chip';b.textContent=k;b.onclick=()=>word(k);$('#topics').appendChild(b)});
+async function word(k){
+  await loadBible();const w=WORDS[k];
+  $('#aout').innerHTML='<h3>'+k+'</h3><p>'+w.t+'</p><p class="bib" style="font-size:17px">'+(BIB?verseText(w.r):'')+'</p><div class="mut">'+refName(w.r)+'</div>';
+  speak(w.t+' '+(BIB?verseText(w.r):''));
+}
+function topicOf(s){
+  s=strip(s);
+  if(/miedo|temor|ansied|nervio|preocup/.test(s))return'Miedo';
+  if(/cansad|agotad|estres|sobrecarg/.test(s))return'Cansancio';
+  if(/familia|hijo|esposa|esposo|madre|padre|hermano/.test(s))return'Familia';
+  if(/futuro|trabajo|dinero|decision|rumbo/.test(s))return'Futuro';
+  if(/culpa|perdon|pecado|error|fall/.test(s))return'Perdón';
+  if(/duda|no entiendo|no se si/.test(s))return'Dudas';
+  return'Ánimo';
+}
+$('#amic').onclick=()=>{
+  if(!SR){$('#aout').innerHTML='<p class="mut">Tu navegador no reconoce la voz. Toca una de las opciones.</p>';return}
+  const r=new SR();r.lang='es-ES';r.interimResults=false;
+  $('#aout').innerHTML='<p>Te escucho…</p>';
+  r.onresult=e=>word(topicOf(e.results[0][0].transcript));
+  r.onerror=()=>{$('#aout').innerHTML='<p class="mut">No pude escucharte. Permite el micrófono o toca una opción.</p>'};
+  r.start();
+};
+$('#astop').onclick=()=>{try{speechSynthesis.cancel()}catch(e){}};
+
+/* Inicio */
+renderHoy();showChapter();
+loadBible().then(()=>{renderHoy();renderGospel()});
+$('#upd').onclick=async()=>{try{for(const r of await navigator.serviceWorker.getRegistrations())await r.unregister();for(const k of await caches.keys())if(k!=='ajustes')await caches.delete(k)}catch(e){}location.reload()};
+if('serviceWorker' in navigator&&location.protocol.startsWith('http')){
+  const had=!!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had&&!window.__r){window.__r=1;location.reload()}});
+}
+</script>
+</body>
+</html>
